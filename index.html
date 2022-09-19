@@ -1,0 +1,214 @@
+<!-- Code from d3-graph-gallery.com -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+<style>
+div.tooltip {   
+  position: absolute;           
+  text-align: center;           
+  width: 500px;                  
+  height: 50px;                 
+  padding: 6px;             
+  font: 20px sans-serif;        
+  background: white;   
+  border: 0px;      
+  border-radius: 8px;           
+  pointer-events: None;         
+}
+div#page-header{
+  height: 20px;
+  width: 1300px;
+  font-size: 15px;
+  text-align: left;
+margin-left: 150px;
+  color: #666;
+
+}
+.ns { color: #2ca02c; font: 12px sans-serif; }
+.mh { color: #ff7f0e; font: 12px sans-serif;  }
+.ss { color: #d62728;  font: 12px sans-serif; }
+.hu { color: #9467bd; font: 12px sans-serif;  }
+.et { color: #1f77b4; font: 12px sans-serif; }
+
+div#my_dataviz {
+  float: left;
+  height: 450px;
+  width: 800px;
+  margin-right: 90px;
+  margin-top: 50px;
+margin-left: 50px;
+  /*border-width: 1px;
+  border-style: solid;
+  border-color: #000;*/
+  background: #eee;
+}
+
+
+
+div#label {
+  width: 90px;
+  height: 190px;
+  float: left;
+  text-align: center;
+  padding-left: 2px;
+margin-left: 700px;
+  margin-top: -440px;
+  border: 2px solid #ccc;
+  background: #fff;
+  font-size: 10px;
+font: 'Comic Sans MS'
+}
+
+
+div#container {
+   border-style: solid;
+   border-width: 1px;
+   border-color: #ccc;
+
+  margin-top: 45px;
+margin-left: 45px;
+ height: 458px;
+  width: 808px;
+}
+
+p.para1{
+    color:green;
+margin-left: -710px;
+  margin-top: 280px;
+font-size: 15px;
+ color: #000;
+text-align: justify;
+}
+
+
+
+
+ 
+</style>
+</head>
+<title>Periodical embeddings</title>
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+
+<body>
+<div id="page-header">
+		<h1> PaCMAP Projection of Periodical Embeddings</h1>
+	</div>
+
+
+<div id="my_dataviz"></div>
+<div id="container">
+<div id="label">
+<p class="ns" onclick="toggleColor('circle.ns')">Natural Sciences</p>
+<p class="mh" onclick="toggleColor('circle.mh')">Medical and Health Sciences</p>
+<p class="et" onclick="toggleColor('circle.et')">Engineering and Technology</p>
+<p class="ss" onclick="toggleColor('circle.ss')">Social Sciences</p>
+<p class="hu" onclick="toggleColor('circle.hu')">Humanities</p>
+
+<p class="para1">This interactive data visualization accompanies the paper “Understanding the scholars’ trajectories across scientific periodicals”. This visualization shows the periodical embeddings used in the paper, which consists of 11,909 periodicals in the dataset. Each periodical is represented as a circle. The color of the circle indicates the field. The graph shows the PaCMAP plot, introduced by Wang et al. in 2020. It allows zooming using mouse or touch. </p>
+<a class="para2" href="https://arxiv.org/pdf/2012.04456.pdf">Learn more about PaCMAP </a>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 30, right: 100, bottom: 30, left: 60},
+    width = 800 
+    height = 500 
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+
+
+
+
+//Read the data
+d3.csv("https://raw.githubusercontent.com/YangliuF95/d3/main/dataviz_2.csv", function(data) {
+
+  // Add X axis
+  var x = d3.scaleLinear()
+.domain([-15, 20])
+    .range([ 0, width-20]);
+
+
+
+
+  // Add Y axis
+  var y = d3.scaleLinear()
+    .domain([-20, 10])
+    .range([ height, 0]);
+var zoom = d3.zoom()
+      .scaleExtent([.5, 20])   // This control how much you can unzoom (x0.5) and zoom (x20)
+      .on("zoom", updateChart);
+svg.append("rect")
+      .attr("width", width)
+      .attr("height", height)
+      .style("fill", "none")
+      .style("pointer-events", "all")
+      .call(zoom);
+
+
+
+ var clip = svg.append("defs").append("svg:clipPath")
+      .attr("id", "clip")
+      .append("svg:rect")
+      .attr("width", width)
+      .attr("height", height-50)
+      .attr("x", 0)
+      .attr("y", 0);
+
+var tooltip = d3.select("body").append("div")   
+    .attr("class", "tooltip")               
+    .style("opacity", 0);
+
+
+  // Add dots
+g=svg.append('g').attr("clip-path", "url(#clip)")
+
+
+
+g.selectAll("dot")
+    .data(data)
+    .enter()
+    .append("circle")
+      .attr("cx", function (d) { return x(d.aror); } )
+      .attr("cy", function (d) { return y(d.asd); } )
+      .attr("r", 2)
+      .style("fill", function (d) { return d.color;})
+	.attr('stroke','black')
+      .attr('stroke-width',0.5).on("mouseover", function(d) {      
+    tooltip.transition().duration(200).style("opacity", .9);      
+    tooltip.html(d.variable)
+      .style("left", (d3.event.pageX) + "px")     
+      .style("top", (d3.event.pageY - 28) + "px");    
+  })                  
+  .on("mouseout", function(d) {       
+    tooltip.transition().duration(500).style("opacity", 0);   
+  });
+
+
+
+function updateChart() {
+
+    // recover the new scale
+    var newX = d3.event.transform.rescaleX(x);
+    var newY = d3.event.transform.rescaleY(y);
+
+    // update circle position
+    g.selectAll("circle")
+      .attr('cx', function(d) {return newX(d.aror)})
+      .attr('cy', function(d) {return newY(d.asd)}).attr("r", 3)
+  }
+
+})
+
+
+
+
+</script>
